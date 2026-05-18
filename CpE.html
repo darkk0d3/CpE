@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CE Learning Tracker</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.47.0/tabler-icons.min.css" />
+  <style>
+    :root {
+      --bg: #f5f5f3;
+      --surface: #ffffff;
+      --surface2: #f0efeb;
+      --border: rgba(0,0,0,0.10);
+      --border-md: rgba(0,0,0,0.18);
+      --text: #1a1a18;
+      --text-sec: #6b6b66;
+      --text-hint: #9b9b96;
+      --green: #1D9E75;
+      --green-dark: #0F6E56;
+      --green-bg: #EAF3DE;
+      --green-text: #3B6D11;
+      --amber-bg: #FAEEDA;
+      --amber-text: #854F0B;
+      --red-bg: #FCEBEB;
+      --red-text: #A32D2D;
+      --radius-sm: 8px;
+      --radius-md: 12px;
+      --radius-lg: 16px;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #1c1c1a;
+        --surface: #252523;
+        --surface2: #2e2e2b;
+        --border: rgba(255,255,255,0.10);
+        --border-md: rgba(255,255,255,0.18);
+        --text: #f0efe8;
+        --text-sec: #9b9b96;
+        --text-hint: #6b6b66;
+        --green-bg: #173404;
+        --green-text: #C0DD97;
+        --amber-bg: #412402;
+        --amber-text: #FAC775;
+        --red-bg: #501313;
+        --red-text: #F7C1C1;
+      }
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    /* ── Layout ── */
+    .container { max-width: 520px; margin: 0 auto; padding: 0 0 80px; }
+
+    /* ── Header ── */
+    .header {
+      background: var(--surface);
+      border-bottom: 0.5px solid var(--border);
+      padding: 20px 20px 0;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+    .header-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+    .header-top h1 { font-size: 20px; font-weight: 600; }
+    .header-top p { font-size: 13px; color: var(--text-sec); }
+    .tab-bar { display: flex; gap: 2px; }
+    .tab {
+      font-size: 13px; font-weight: 500; padding: 8px 14px;
+      border: none; background: none; color: var(--text-sec);
+      cursor: pointer; border-bottom: 2px solid transparent;
+      font-family: inherit; transition: color 0.15s;
+    }
+    .tab:hover { color: var(--text); }
+    .tab.active { color: var(--green); border-bottom-color: var(--green); }
+
+    /* ── Stats ── */
+    .stats { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; padding: 16px 16px 0; }
+    .stat {
+      background: var(--surface); border: 0.5px solid var(--border);
+      border-radius: var(--radius-md); padding: 12px; text-align: center;
+    }
+    .stat-num { font-size: 26px; font-weight: 600; }
+    .stat-label { font-size: 11px; color: var(--text-sec); margin-top: 2px; }
+    .stat.learn .stat-num { color: #E24B4A; }
+    .stat.prog .stat-num { color: #BA7517; }
+    .stat.know .stat-num { color: var(--green); }
+
+    /* ── Content ── */
+    .content { padding: 14px 16px; }
+
+    /* ── Subject Cards ── */
+    .subject-card {
+      background: var(--surface);
+      border: 0.5px solid var(--border);
+      border-radius: var(--radius-lg);
+      margin-bottom: 10px;
+      overflow: hidden;
+    }
+    .subject-header {
+      display: flex; align-items: center; gap: 10px;
+      padding: 12px 14px; cursor: pointer;
+      user-select: none;
+    }
+    .subject-header:hover { background: var(--surface2); }
+    .subject-icon {
+      width: 36px; height: 36px; border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px; flex-shrink: 0;
+    }
+    .subject-info { flex: 1; min-width: 0; }
+    .subject-name { font-size: 14px; font-weight: 500; }
+    .progress-row { display: flex; align-items: center; gap: 8px; margin-top: 4px; }
+    .progress-track { flex: 1; height: 4px; background: var(--surface2); border-radius: 2px; overflow: hidden; }
+    .progress-fill { height: 100%; background: var(--green); border-radius: 2px; transition: width 0.3s ease; }
+    .progress-label { font-size: 11px; color: var(--text-hint); white-space: nowrap; }
+    .chevron { color: var(--text-hint); font-size: 16px; transition: transform 0.2s; flex-shrink: 0; }
+    .chevron.open { transform: rotate(180deg); }
+    .del-sub-btn {
+      background: none; border: none; cursor: pointer;
+      color: var(--text-hint); font-size: 15px; padding: 4px;
+      border-radius: 6px; flex-shrink: 0;
+    }
+    .del-sub-btn:hover { color: #E24B4A; background: var(--red-bg); }
+
+    /* ── Lessons ── */
+    .lessons-list { border-top: 0.5px solid var(--border); }
+    .lesson-row {
+      display: flex; align-items: center; gap: 10px;
+      padding: 9px 14px; border-bottom: 0.5px solid var(--border);
+    }
+    .lesson-row:last-of-type { border-bottom: none; }
+    .lesson-name { flex: 1; font-size: 13px; }
+    .badge {
+      font-size: 10px; font-weight: 600; padding: 3px 9px;
+      border-radius: 20px; cursor: pointer; border: none;
+      font-family: inherit; white-space: nowrap; transition: opacity 0.15s;
+      letter-spacing: 0.02em;
+    }
+    .badge:hover { opacity: 0.75; }
+    .badge.learn { background: var(--red-bg); color: var(--red-text); }
+    .badge.progress { background: var(--amber-bg); color: var(--amber-text); }
+    .badge.know { background: var(--green-bg); color: var(--green-text); }
+    .del-btn {
+      background: none; border: none; cursor: pointer;
+      color: var(--text-hint); font-size: 14px; padding: 2px 4px; flex-shrink: 0;
+    }
+    .del-btn:hover { color: #E24B4A; }
+
+    /* ── Add Lesson Row ── */
+    .add-lesson-row {
+      display: flex; gap: 6px; padding: 8px 14px;
+      border-top: 0.5px solid var(--border);
+      background: var(--surface2);
+    }
+    .add-lesson-row input {
+      flex: 1; font-size: 13px; padding: 7px 10px;
+      border: 0.5px solid var(--border-md); border-radius: var(--radius-sm);
+      background: var(--surface); color: var(--text); font-family: inherit; outline: none;
+    }
+    .add-lesson-row input:focus { border-color: var(--green); }
+    .btn-sm {
+      font-size: 12px; font-weight: 500; padding: 7px 12px;
+      background: var(--green); color: #fff; border: none;
+      border-radius: var(--radius-sm); cursor: pointer; font-family: inherit;
+      white-space: nowrap;
+    }
+    .btn-sm:hover { background: var(--green-dark); }
+
+    /* ── Filter Bar ── */
+    .filter-bar { display: flex; gap: 6px; margin-bottom: 14px; flex-wrap: wrap; }
+    .filter-btn {
+      font-size: 12px; font-weight: 500; padding: 5px 12px;
+      border-radius: 20px; border: 0.5px solid var(--border-md);
+      background: var(--surface); color: var(--text-sec);
+      cursor: pointer; font-family: inherit; transition: all 0.15s;
+    }
+    .filter-btn:hover { background: var(--surface2); }
+    .filter-btn.f-all.active { background: var(--surface2); color: var(--text); border-color: var(--border-md); }
+    .filter-btn.f-learn.active { background: var(--red-bg); color: var(--red-text); border-color: var(--red-text); }
+    .filter-btn.f-progress.active { background: var(--amber-bg); color: var(--amber-text); border-color: var(--amber-text); }
+    .filter-btn.f-know.active { background: var(--green-bg); color: var(--green-text); border-color: var(--green-text); }
+
+    /* ── Add Subject Tab ── */
+    .add-subject-card {
+      background: var(--surface); border: 0.5px solid var(--border);
+      border-radius: var(--radius-lg); padding: 18px;
+    }
+    .add-subject-card h2 { font-size: 15px; font-weight: 600; margin-bottom: 14px; }
+    .form-label { font-size: 12px; font-weight: 500; color: var(--text-sec); margin-bottom: 6px; display: block; }
+    .form-group { margin-bottom: 14px; }
+    .icon-grid { display: grid; grid-template-columns: repeat(6,1fr); gap: 6px; }
+    .icon-opt {
+      width: 42px; height: 42px; border-radius: 10px; border: 1.5px solid transparent;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px; cursor: pointer; transition: border-color 0.15s;
+      background: var(--surface2);
+    }
+    .icon-opt.selected { border-color: var(--green); }
+    .color-grid { display: flex; gap: 8px; flex-wrap: wrap; }
+    .color-opt {
+      width: 26px; height: 26px; border-radius: 6px; cursor: pointer;
+      border: 2px solid transparent; transition: border-color 0.15s;
+    }
+    .color-opt.selected { border-color: var(--green); }
+    .name-row { display: flex; gap: 8px; }
+    .name-row input {
+      flex: 1; font-size: 14px; padding: 9px 12px;
+      border: 0.5px solid var(--border-md); border-radius: var(--radius-sm);
+      background: var(--surface); color: var(--text); font-family: inherit; outline: none;
+    }
+    .name-row input:focus { border-color: var(--green); }
+    .btn-primary {
+      font-size: 14px; font-weight: 600; padding: 9px 18px;
+      background: var(--green); color: #fff; border: none;
+      border-radius: var(--radius-sm); cursor: pointer; font-family: inherit;
+    }
+    .btn-primary:hover { background: var(--green-dark); }
+    .tip-box {
+      margin-top: 14px; padding: 10px 12px;
+      background: var(--surface2); border-radius: var(--radius-sm);
+      font-size: 12px; color: var(--text-sec); line-height: 1.5;
+    }
+
+    /* ── All Lessons ── */
+    .group-label {
+      display: flex; align-items: center; gap: 6px;
+      font-size: 12px; font-weight: 600; color: var(--text-sec);
+      margin-bottom: 6px; margin-top: 4px;
+    }
+    .empty {
+      text-align: center; padding: 40px 16px;
+      color: var(--text-hint); font-size: 14px;
+    }
+    .empty i { font-size: 36px; display: block; margin-bottom: 8px; }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <div class="header">
+    <div class="header-top">
+      <div>
+        <h1>CE Learning Tracker</h1>
+        <p id="header-sub">Track your progress across all subjects</p>
+      </div>
+    </div>
+    <div class="tab-bar">
+      <button class="tab active" data-tab="subjects" onclick="switchTab('subjects')">Subjects</button>
+      <button class="tab" data-tab="all" onclick="switchTab('all')">All Lessons</button>
+      <button class="tab" data-tab="add" onclick="switchTab('add')">+ Add Subject</button>
+    </div>
+  </div>
+
+  <div class="stats">
+    <div class="stat learn"><div class="stat-num" id="stat-learn">0</div><div class="stat-label">To learn</div></div>
+    <div class="stat prog"><div class="stat-num" id="stat-prog">0</div><div class="stat-label">In progress</div></div>
+    <div class="stat know"><div class="stat-num" id="stat-know">0</div><div class="stat-label">Known</div></div>
+  </div>
+
+  <div class="content">
+    <!-- Subjects Tab -->
+    <div id="tab-subjects"></div>
+
+    <!-- All Lessons Tab -->
+    <div id="tab-all" style="display:none">
+      <div class="filter-bar">
+        <button class="filter-btn f-all active" onclick="setFilter('all')">All (<span id="fc-all">0</span>)</button>
+        <button class="filter-btn f-learn" onclick="setFilter('learn')">To learn (<span id="fc-learn">0</span>)</button>
+        <button class="filter-btn f-progress" onclick="setFilter('progress')">In progress (<span id="fc-progress">0</span>)</button>
+        <button class="filter-btn f-know" onclick="setFilter('know')">Known (<span id="fc-know">0</span>)</button>
+      </div>
+      <div id="all-lessons-list"></div>
+    </div>
+
+    <!-- Add Subject Tab -->
+    <div id="tab-add" style="display:none">
+      <div class="add-subject-card">
+        <h2>New subject</h2>
+        <div class="form-group">
+          <label class="form-label">Choose an icon</label>
+          <div class="icon-grid" id="icon-grid"></div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Choose a color</label>
+          <div class="color-grid" id="color-grid"></div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Subject name</label>
+          <div class="name-row">
+            <input type="text" id="new-sub-name" placeholder="e.g. Computer Vision" onkeydown="if(event.key==='Enter')addSubject()" />
+            <button class="btn-primary" onclick="addSubject()">Add</button>
+          </div>
+        </div>
+        <div class="tip-box">
+          <i class="ti ti-info-circle"></i>
+          <strong>Tip:</strong> Tap any status badge to cycle it through → To learn → In progress → Already know
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ── Data ──────────────────────────────────────────────────────────────────
+  const ICONS   = ["💻","📐","⚡","🔌","📡","🧮","🔧","📊","🖥️","🧠","📱","🔬"];
+  const COLORS  = ["#E1F5EE","#EEEDFE","#FAEEDA","#FCEBEB","#E6F1FB","#EAF3DE",
+                   "#FBEAF0","#FAF0E1","#E8F5E9","#FFF3E0","#E3F2FD","#F3E5F5"];
+
+  const DEFAULT_SUBJECTS = [
+    { id:"s1", name:"Data Structures", icon:"🧮", color:"#EEEDFE", lessons:[
+      {id:"l1",name:"Arrays & Linked Lists",status:"know"},
+      {id:"l2",name:"Stacks & Queues",status:"know"},
+      {id:"l3",name:"Trees (BST, AVL)",status:"progress"},
+      {id:"l4",name:"Graphs (BFS, DFS)",status:"learn"},
+      {id:"l5",name:"Heaps & Priority Queues",status:"learn"},
+      {id:"l6",name:"Hash Tables",status:"progress"},
+    ]},
+    { id:"s2", name:"Algorithms", icon:"📐", color:"#E1F5EE", lessons:[
+      {id:"l7",name:"Sorting (Merge, Quick)",status:"know"},
+      {id:"l8",name:"Binary Search",status:"know"},
+      {id:"l9",name:"Dynamic Programming",status:"learn"},
+      {id:"l10",name:"Greedy Algorithms",status:"learn"},
+      {id:"l11",name:"Divide & Conquer",status:"progress"},
+    ]},
+    { id:"s3", name:"Digital Logic", icon:"⚡", color:"#FAEEDA", lessons:[
+      {id:"l12",name:"Logic Gates",status:"know"},
+      {id:"l13",name:"Boolean Algebra",status:"know"},
+      {id:"l14",name:"Combinational Circuits",status:"progress"},
+      {id:"l15",name:"Sequential Circuits",status:"learn"},
+      {id:"l16",name:"Flip-Flops & Registers",status:"learn"},
+    ]},
+    { id:"s4", name:"Computer Architecture", icon:"🖥️", color:"#E6F1FB", lessons:[
+      {id:"l17",name:"CPU Components",status:"progress"},
+      {id:"l18",name:"Instruction Set Architecture",status:"learn"},
+      {id:"l19",name:"Pipelining",status:"learn"},
+      {id:"l20",name:"Cache Memory",status:"learn"},
+      {id:"l21",name:"Memory Hierarchy",status:"learn"},
+    ]},
+    { id:"s5", name:"Operating Systems", icon:"🔧", color:"#EAF3DE", lessons:[
+      {id:"l22",name:"Processes & Threads",status:"learn"},
+      {id:"l23",name:"CPU Scheduling",status:"learn"},
+      {id:"l24",name:"Memory Management",status:"learn"},
+      {id:"l25",name:"Deadlocks",status:"learn"},
+      {id:"l26",name:"File Systems",status:"learn"},
+    ]},
+    { id:"s6", name:"Electronics", icon:"🔌", color:"#FCEBEB", lessons:[
+      {id:"l27",name:"Ohm's Law & Circuits",status:"know"},
+      {id:"l28",name:"Diodes & Transistors",status:"progress"},
+      {id:"l29",name:"Op-Amps",status:"learn"},
+      {id:"l30",name:"RC/RL Circuits",status:"learn"},
+    ]},
+    { id:"s7", name:"Programming", icon:"💻", color:"#E1F5EE", lessons:[
+      {id:"l31",name:"OOP Concepts",status:"know"},
+      {id:"l32",name:"Recursion",status:"know"},
+      {id:"l33",name:"Design Patterns",status:"progress"},
+      {id:"l34",name:"Concurrency",status:"learn"},
+    ]},
+    { id:"s8", name:"Computer Networks", icon:"📡", color:"#EEEDFE", lessons:[
+      {id:"l35",name:"OSI Model",status:"learn"},
+      {id:"l36",name:"TCP/IP",status:"learn"},
+      {id:"l37",name:"Routing Protocols",status:"learn"},
+      {id:"l38",name:"Network Security Basics",status:"learn"},
+    ]},
+  ];
+
+  // ── State ─────────────────────────────────────────────────────────────────
+  let subjects  = JSON.parse(localStorage.getItem("ce_subjects")) || DEFAULT_SUBJECTS;
+  let openSubs  = {};
+  let activeTab = "subjects";
+  let filter    = "all";
+  let newIcon   = ICONS[0];
+  let newColor  = COLORS[0];
+
+  function uid() { return Math.random().toString(36).slice(2,9); }
+  function save() { localStorage.setItem("ce_subjects", JSON.stringify(subjects)); }
+
+  // ── Status helpers ────────────────────────────────────────────────────────
+  function nextStatus(s) {
+    return s === "learn" ? "progress" : s === "progress" ? "know" : "learn";
+  }
+  function badgeMeta(s) {
+    if (s === "know")     return { cls:"know",     label:"Already know" };
+    if (s === "progress") return { cls:"progress", label:"In progress"  };
+    return                       { cls:"learn",    label:"To learn"     };
+  }
+
+  // ── Tab switching ─────────────────────────────────────────────────────────
+  function switchTab(tab) {
+    activeTab = tab;
+    ["subjects","all","add"].forEach(t => {
+      document.getElementById("tab-"+t).style.display = t === tab ? "" : "none";
+      document.querySelector(`[data-tab="${t}"]`).classList.toggle("active", t === tab);
+    });
+    render();
+  }
+
+  // ── Render stats ──────────────────────────────────────────────────────────
+  function renderStats() {
+    const all = subjects.flatMap(s => s.lessons);
+    const learn = all.filter(l => l.status === "learn").length;
+    const prog  = all.filter(l => l.status === "progress").length;
+    const know  = all.filter(l => l.status === "know").length;
+    document.getElementById("stat-learn").textContent = learn;
+    document.getElementById("stat-prog").textContent  = prog;
+    document.getElementById("stat-know").textContent  = know;
+    document.getElementById("fc-all").textContent      = all.length;
+    document.getElementById("fc-learn").textContent    = learn;
+    document.getElementById("fc-progress").textContent = prog;
+    document.getElementById("fc-know").textContent     = know;
+    document.getElementById("header-sub").textContent =
+      `${know} known · ${prog} in progress · ${learn} to learn`;
+  }
+
+  // ── Render subjects tab ───────────────────────────────────────────────────
+  function renderSubjects() {
+    const wrap = document.getElementById("tab-subjects");
+    if (subjects.length === 0) {
+      wrap.innerHTML = `<div class="empty"><i class="ti ti-books"></i>No subjects yet. Go to "+ Add Subject"!</div>`;
+      return;
+    }
+    wrap.innerHTML = subjects.map(s => {
+      const know = s.lessons.filter(l => l.status === "know").length;
+      const pct  = s.lessons.length ? Math.round((know / s.lessons.length) * 100) : 0;
+      const isOpen = !!openSubs[s.id];
+      const lessonsHTML = isOpen ? `
+        <div class="lessons-list">
+          ${s.lessons.length === 0
+            ? `<div style="padding:10px 14px;font-size:13px;color:var(--text-hint)">No lessons yet. Add one below.</div>`
+            : s.lessons.map(l => {
+                const m = badgeMeta(l.status);
+                return `
+                  <div class="lesson-row">
+                    <span class="lesson-name">${esc(l.name)}</span>
+                    <button class="badge ${m.cls}" onclick="cycleStatus('${s.id}','${l.id}')" title="Tap to cycle status">${m.label}</button>
+                    <button class="del-btn" onclick="delLesson('${s.id}','${l.id}')" title="Delete"><i class="ti ti-x"></i></button>
+                  </div>`;
+              }).join("")}
+          <div class="add-lesson-row">
+            <input type="text" id="nl-${s.id}" placeholder="Add a lesson..." onkeydown="if(event.key==='Enter')addLesson('${s.id}')" />
+            <button class="btn-sm" onclick="addLesson('${s.id}')">Add</button>
+          </div>
+        </div>` : "";
+      return `
+        <div class="subject-card">
+          <div class="subject-header" onclick="toggleSub('${s.id}')">
+            <div class="subject-icon" style="background:${s.color}">${s.icon}</div>
+            <div class="subject-info">
+              <div class="subject-name">${esc(s.name)}</div>
+              <div class="progress-row">
+                <div class="progress-track"><div class="progress-fill" style="width:${pct}%"></div></div>
+                <span class="progress-label">${know}/${s.lessons.length} known</span>
+              </div>
+            </div>
+            <button class="del-sub-btn" onclick="event.stopPropagation();delSubject('${s.id}')" title="Delete subject"><i class="ti ti-trash"></i></button>
+            <i class="ti ti-chevron-down chevron ${isOpen?"open":""}"></i>
+          </div>
+          ${lessonsHTML}
+        </div>`;
+    }).join("");
+  }
+
+  // ── Render all-lessons tab ────────────────────────────────────────────────
+  function renderAll() {
+    const wrap = document.getElementById("all-lessons-list");
+    document.querySelectorAll(".filter-btn").forEach(b => {
+      b.classList.toggle("active", b.classList.contains("f-"+filter));
+    });
+    const groups = subjects.map(s => ({
+      ...s,
+      filtered: s.lessons.filter(l => filter === "all" || l.status === filter)
+    })).filter(s => s.filtered.length > 0);
+
+    if (groups.length === 0) {
+      wrap.innerHTML = `<div class="empty"><i class="ti ti-mood-smile"></i>No lessons here yet!</div>`;
+      return;
+    }
+    wrap.innerHTML = groups.map(s => `
+      <div class="group-label">${s.icon} ${esc(s.name)}</div>
+      <div class="subject-card" style="margin-bottom:14px">
+        <div class="lessons-list">
+          ${s.filtered.map(l => {
+            const m = badgeMeta(l.status);
+            return `
+              <div class="lesson-row">
+                <span class="lesson-name">${esc(l.name)}</span>
+                <button class="badge ${m.cls}" onclick="cycleStatus('${s.id}','${l.id}')" title="Tap to cycle">${m.label}</button>
+              </div>`;
+          }).join("")}
+        </div>
+      </div>`).join("");
+  }
+
+  // ── Render add-subject tab ────────────────────────────────────────────────
+  function renderAddTab() {
+    const ig = document.getElementById("icon-grid");
+    if (ig && ig.children.length === 0) {
+      ig.innerHTML = ICONS.map(ic =>
+        `<div class="icon-opt${ic===newIcon?" selected":""}" onclick="pickIcon('${ic}')">${ic}</div>`
+      ).join("");
+    }
+    const cg = document.getElementById("color-grid");
+    if (cg && cg.children.length === 0) {
+      cg.innerHTML = COLORS.map(c =>
+        `<div class="color-opt${c===newColor?" selected":""}" style="background:${c}" onclick="pickColor('${c}')"></div>`
+      ).join("");
+    }
+  }
+
+  // ── Main render ───────────────────────────────────────────────────────────
+  function render() {
+    renderStats();
+    if (activeTab === "subjects") renderSubjects();
+    if (activeTab === "all")      renderAll();
+    if (activeTab === "add")      renderAddTab();
+  }
+
+  // ── Actions ───────────────────────────────────────────────────────────────
+  function toggleSub(sid) {
+    openSubs[sid] = !openSubs[sid];
+    renderSubjects();
+  }
+
+  function cycleStatus(sid, lid) {
+    subjects = subjects.map(s => s.id !== sid ? s : {
+      ...s, lessons: s.lessons.map(l => l.id !== lid ? l : { ...l, status: nextStatus(l.status) })
+    });
+    save(); render();
+  }
+
+  function delLesson(sid, lid) {
+    subjects = subjects.map(s => s.id !== sid ? s : {
+      ...s, lessons: s.lessons.filter(l => l.id !== lid)
+    });
+    save(); render();
+  }
+
+  function addLesson(sid) {
+    const el = document.getElementById("nl-"+sid);
+    const name = (el?.value || "").trim();
+    if (!name) return;
+    subjects = subjects.map(s => s.id !== sid ? s : {
+      ...s, lessons: [...s.lessons, { id: uid(), name, status: "learn" }]
+    });
+    save(); render();
+    // re-focus input after render
+    setTimeout(() => { const el2 = document.getElementById("nl-"+sid); if(el2) el2.focus(); }, 10);
+  }
+
+  function delSubject(sid) {
+    if (!confirm("Delete this subject and all its lessons?")) return;
+    subjects = subjects.filter(s => s.id !== sid);
+    save(); render();
+  }
+
+  function pickIcon(ic) {
+    newIcon = ic;
+    document.querySelectorAll(".icon-opt").forEach(el => {
+      el.classList.toggle("selected", el.textContent === ic);
+    });
+  }
+
+  function pickColor(c) {
+    newColor = c;
+    document.querySelectorAll(".color-opt").forEach(el => {
+      el.classList.toggle("selected", el.style.background === c ||
+        el.style.backgroundColor === c);
+    });
+  }
+
+  function addSubject() {
+    const name = (document.getElementById("new-sub-name")?.value || "").trim();
+    if (!name) { alert("Please enter a subject name."); return; }
+    subjects.push({ id: uid(), name, icon: newIcon, color: newColor, lessons: [] });
+    save();
+    document.getElementById("new-sub-name").value = "";
+    switchTab("subjects");
+  }
+
+  function setFilter(f) {
+    filter = f;
+    renderAll();
+  }
+
+  function esc(str) {
+    return str.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+  }
+
+  // ── Init ──────────────────────────────────────────────────────────────────
+  render();
+</script>
+</body>
+</html>
