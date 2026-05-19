@@ -708,7 +708,7 @@
   }
 
   // ── Acad Plan (static) ────────────────────────────────────────────────────
-  const CURRICULUM = [
+  const DEFAULT_CURRICULUM = [
     { id:"s11", label:"1st Year — 1st Sem", current:false, subjects:[
       {code:"MLC 1101",name:"Literacy/Civic Welfare/Military Science 1",units:3,status:"credited"},
       {code:"NCH 1101",name:"Chemistry for Engineers Lec",units:3,status:"credited"},
@@ -811,6 +811,49 @@
     ]},
   ];
 
+  let CURRICULUM = JSON.parse(localStorage.getItem("ce_curriculum")) || DEFAULT_CURRICULUM;
+
+  function saveCurriculum() {
+    localStorage.setItem("ce_curriculum", JSON.stringify(CURRICULUM));
+  }
+
+  function acadSubjectMeta(code) {
+    if (code.startsWith("NCP") || code.startsWith("NEC")) return { icon:"💻", color:"#E6F1FB" };
+    if (code.startsWith("NEE"))  return { icon:"⚡", color:"#FAEEDA" };
+    if (code.startsWith("NMA"))  return { icon:"📐", color:"#E1F5EE" };
+    if (code.startsWith("NPH"))  return { icon:"🔬", color:"#E3F2FD" };
+    if (code.startsWith("NCH"))  return { icon:"🧮", color:"#EAF3DE" };
+    if (code.startsWith("ZGE") || code.startsWith("ZPD")) return { icon:"📚", color:"#F3E5F5" };
+    if (code.startsWith("PPE"))  return { icon:"🏃", color:"#E8F5E9" };
+    return { icon:"📋", color:"#FAF0E1" };
+  }
+
+  function syncAcadToSubjects() {
+    CURRICULUM.forEach(sem => {
+      sem.subjects.forEach(s => {
+        if (s.status !== "enrolled") return;
+        if (subjects.find(sub => sub.acadCode === s.code)) return;
+        const meta = acadSubjectMeta(s.code);
+        subjects.push({ id: uid(), name: s.name, icon: meta.icon, color: meta.color, lessons: [], acadCode: s.code });
+      });
+    });
+    save();
+  }
+
+  function cycleAcadStatus(semId, code) {
+    const order = ["pending", "enrolled", "credited"];
+    CURRICULUM.forEach(sem => {
+      if (sem.id !== semId) return;
+      sem.subjects.forEach(s => {
+        if (s.code !== code) return;
+        s.status = order[(order.indexOf(s.status) + 1) % order.length];
+      });
+    });
+    saveCurriculum();
+    syncAcadToSubjects();
+    render();
+  }
+
   let acadInitialized = false;
 
   function acadStatusMeta(st) {
@@ -880,7 +923,7 @@
                     <span class="subj-code">${esc(s.code)}</span>
                     <span class="lesson-name">${esc(s.name)}</span>
                     <span class="subj-units">${s.units}u</span>
-                    <span class="badge ${m.cls}">${m.label}</span>
+                    <button class="badge ${m.cls}" onclick="cycleAcadStatus('${sem.id}','${s.code}')">${m.label}</button>
                   </div>`;
               }).join("")}
             </div>
@@ -889,6 +932,7 @@
   }
 
   // ── Init ──────────────────────────────────────────────────────────────────
+  syncAcadToSubjects();
   render();
 </script>
 </body>
