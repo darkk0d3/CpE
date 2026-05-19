@@ -55,6 +55,8 @@
 
     /* ── Layout ── */
     .container { max-width: 520px; margin: 0 auto; padding: 0 0 80px; }
+    .main { }
+    .tab-icon { display: none; }
 
     /* ── Header ── */
     .header {
@@ -351,6 +353,63 @@
     }
     .cpick.selected { border-color: var(--text); }
     .sched-section-lbl { font-size: 12px; font-weight: 600; color: var(--text-sec); margin: 14px 0 6px; }
+
+    /* ── Desktop Sidebar Layout ── */
+    @media (min-width: 768px) {
+      html, body { height: 100%; overflow: hidden; }
+
+      .container {
+        display: flex; flex-direction: row;
+        max-width: 100%; margin: 0; padding: 0;
+        height: 100vh;
+      }
+
+      /* Sidebar */
+      .header {
+        width: 220px; flex-shrink: 0;
+        position: static;
+        border-bottom: none;
+        border-right: 0.5px solid var(--border);
+        height: 100vh; overflow-y: auto;
+        padding: 28px 0 40px;
+        display: flex; flex-direction: column;
+      }
+      .header-top { padding: 0 18px; margin-bottom: 20px; }
+      .header-top h1 { font-size: 16px; }
+      .header-top p  { font-size: 12px; }
+
+      /* Vertical nav tabs */
+      .tab-bar {
+        flex-direction: column; gap: 2px;
+        overflow-x: visible; padding: 0 10px;
+        flex: 1;
+      }
+      .tab {
+        border-bottom-width: 0;
+        border-left: 3px solid transparent;
+        border-radius: var(--radius-sm);
+        text-align: left; padding: 10px 12px;
+        display: flex; align-items: center; gap: 10px;
+        width: 100%;
+      }
+      .tab:hover { background: var(--surface2); }
+      .tab.active {
+        background: var(--surface2);
+        border-left-color: var(--green);
+        border-bottom-color: transparent;
+      }
+      .tab-icon { display: inline-block; font-size: 17px; flex-shrink: 0; }
+
+      /* Main scrollable area */
+      .main { flex: 1; overflow-y: auto; height: 100vh; }
+      .stats { padding: 20px 24px 0; max-width: none; }
+      .content { padding: 14px 24px 40px; }
+
+      /* Wider cards on desktop */
+      .subject-card, .add-subject-card,
+      .sched-form, .section-banner,
+      .api-setup-card { max-width: 780px; }
+    }
   </style>
 </head>
 <body>
@@ -364,15 +423,16 @@
       </div>
     </div>
     <div class="tab-bar">
-      <button class="tab active" data-tab="subjects" onclick="switchTab('subjects')">Subjects</button>
-      <button class="tab" data-tab="all" onclick="switchTab('all')">All Lessons</button>
-      <button class="tab" data-tab="add" onclick="switchTab('add')">+ Add Subject</button>
-      <button class="tab" data-tab="ojt" onclick="switchTab('ojt')">OJT Guide</button>
-      <button class="tab" data-tab="acad" onclick="switchTab('acad')">Acad Plan</button>
-      <button class="tab" data-tab="sched" onclick="switchTab('sched')">Schedule</button>
+      <button class="tab active" data-tab="subjects" onclick="switchTab('subjects')"><i class="ti ti-books tab-icon"></i><span>Subjects</span></button>
+      <button class="tab" data-tab="all" onclick="switchTab('all')"><i class="ti ti-list tab-icon"></i><span>All Lessons</span></button>
+      <button class="tab" data-tab="add" onclick="switchTab('add')"><i class="ti ti-plus tab-icon"></i><span>Add Subject</span></button>
+      <button class="tab" data-tab="ojt" onclick="switchTab('ojt')"><i class="ti ti-shield tab-icon"></i><span>OJT Guide</span></button>
+      <button class="tab" data-tab="acad" onclick="switchTab('acad')"><i class="ti ti-school tab-icon"></i><span>Acad Plan</span></button>
+      <button class="tab" data-tab="sched" onclick="switchTab('sched')"><i class="ti ti-calendar tab-icon"></i><span>Schedule</span></button>
     </div>
   </div>
 
+  <div class="main">
   <div class="stats">
     <div class="stat learn"><div class="stat-num" id="stat-learn">0</div><div class="stat-label">To learn</div></div>
     <div class="stat prog"><div class="stat-num" id="stat-prog">0</div><div class="stat-label">In progress</div></div>
@@ -435,6 +495,7 @@
       </div>
     </div>
   </div>
+  </div><!-- /.main -->
 </div>
 
 <script>
