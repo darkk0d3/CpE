@@ -267,6 +267,90 @@
       border-radius: 20px; background: var(--green-bg); color: var(--green-text);
       margin-left: 6px; vertical-align: middle;
     }
+
+    /* ── Schedule Tab ── */
+    .sched-sub { display: flex; gap: 6px; margin-bottom: 14px; }
+    .sched-sub-btn {
+      font-size: 12px; font-weight: 500; padding: 5px 14px;
+      border-radius: 20px; border: 0.5px solid var(--border-md);
+      background: var(--surface); color: var(--text-sec);
+      cursor: pointer; font-family: inherit; transition: all 0.15s;
+    }
+    .sched-sub-btn.active { background: var(--green); color: #fff; border-color: var(--green); }
+    .class-card {
+      background: var(--surface); border: 0.5px solid var(--border);
+      border-radius: var(--radius-md); padding: 10px 14px;
+      margin-bottom: 8px; display: flex; align-items: center; gap: 10px;
+    }
+    .class-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+    .class-info { flex: 1; min-width: 0; }
+    .class-name { font-size: 13px; font-weight: 500; }
+    .class-room { font-size: 11px; color: var(--text-hint); margin-top: 1px; }
+    .class-time { font-size: 11px; color: var(--text-hint); white-space: nowrap; flex-shrink: 0; }
+    .event-card {
+      background: var(--surface); border: 0.5px solid var(--border);
+      border-radius: var(--radius-md); padding: 10px 14px;
+      margin-bottom: 8px; display: flex; align-items: center; gap: 10px;
+    }
+    .event-type-badge {
+      font-size: 9px; font-weight: 700; padding: 3px 8px; border-radius: 20px;
+      white-space: nowrap; flex-shrink: 0; text-transform: uppercase; letter-spacing: 0.04em;
+    }
+    .event-type-badge.exam { background: var(--red-bg);   color: var(--red-text);   }
+    .event-type-badge.quiz { background: var(--amber-bg); color: var(--amber-text); }
+    .event-type-badge.lab  { background: var(--green-bg); color: var(--green-text); }
+    .event-type-badge.act  { background: #E6F1FB; color: #1a5276; }
+    .event-info { flex: 1; min-width: 0; }
+    .event-name { font-size: 13px; font-weight: 500; }
+    .event-when { font-size: 11px; color: var(--text-hint); margin-top: 1px; }
+    .day-block { margin-bottom: 16px; }
+    .day-label {
+      font-size: 12px; font-weight: 600; color: var(--text-sec);
+      margin-bottom: 6px; display: flex; align-items: center; gap: 6px;
+    }
+    .day-label.today-label { color: var(--green); }
+    .notif-bar {
+      display: flex; align-items: center; justify-content: space-between;
+      background: var(--surface); border: 0.5px solid var(--border);
+      border-radius: var(--radius-md); padding: 10px 14px; margin-bottom: 12px;
+    }
+    .notif-bar-label { font-size: 12px; color: var(--text-sec); }
+    .notif-btn {
+      font-size: 11px; font-weight: 600; padding: 4px 12px;
+      border-radius: 20px; border: none; cursor: pointer; font-family: inherit;
+    }
+    .notif-btn.on  { background: var(--green-bg); color: var(--green-text); cursor: default; }
+    .notif-btn.off { background: var(--surface2); color: var(--text-sec); }
+    .sched-form {
+      background: var(--surface); border: 0.5px solid var(--border);
+      border-radius: var(--radius-lg); padding: 16px; margin-bottom: 14px;
+    }
+    .sched-form h3 { font-size: 13px; font-weight: 600; margin-bottom: 12px; }
+    .sched-input {
+      width: 100%; font-size: 13px; padding: 7px 10px;
+      border: 0.5px solid var(--border-md); border-radius: var(--radius-sm);
+      background: var(--surface); color: var(--text); font-family: inherit;
+      outline: none; margin-bottom: 10px; display: block;
+    }
+    .sched-input:focus { border-color: var(--green); }
+    .day-checks { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
+    .day-check {
+      font-size: 11px; font-weight: 600; padding: 4px 10px;
+      border-radius: 20px; border: 1.5px solid var(--border-md);
+      cursor: pointer; user-select: none; transition: all 0.15s;
+      color: var(--text-sec); background: var(--surface);
+    }
+    .day-check.selected { border-color: var(--green); background: var(--green-bg); color: var(--green-text); }
+    .sched-time-row { display: flex; gap: 8px; margin-bottom: 10px; align-items: center; }
+    .sched-time-row .sched-input { margin-bottom: 0; flex: 1; }
+    .time-lbl { font-size: 11px; color: var(--text-sec); white-space: nowrap; }
+    .cpick-row { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; }
+    .cpick {
+      width: 22px; height: 22px; border-radius: 50%; cursor: pointer;
+      border: 2px solid transparent; transition: border-color 0.15s;
+    }
+    .cpick.selected { border-color: var(--text); }
+    .sched-section-lbl { font-size: 12px; font-weight: 600; color: var(--text-sec); margin: 14px 0 6px; }
   </style>
 </head>
 <body>
@@ -285,6 +369,7 @@
       <button class="tab" data-tab="add" onclick="switchTab('add')">+ Add Subject</button>
       <button class="tab" data-tab="ojt" onclick="switchTab('ojt')">OJT Guide</button>
       <button class="tab" data-tab="acad" onclick="switchTab('acad')">Acad Plan</button>
+      <button class="tab" data-tab="sched" onclick="switchTab('sched')">Schedule</button>
     </div>
   </div>
 
@@ -317,6 +402,11 @@
     <!-- Acad Plan Tab -->
     <div id="tab-acad" style="display:none">
       <div id="acad-content"></div>
+    </div>
+
+    <!-- Schedule Tab -->
+    <div id="tab-sched" style="display:none">
+      <div id="sched-content"></div>
     </div>
 
     <!-- Add Subject Tab -->
@@ -434,7 +524,7 @@
   // ── Tab switching ─────────────────────────────────────────────────────────
   function switchTab(tab) {
     activeTab = tab;
-    ["subjects","all","ojt","acad","add"].forEach(t => {
+    ["subjects","all","ojt","acad","add","sched"].forEach(t => {
       document.getElementById("tab-"+t).style.display = t === tab ? "" : "none";
       document.querySelector(`[data-tab="${t}"]`).classList.toggle("active", t === tab);
     });
@@ -561,6 +651,7 @@
     if (activeTab === "add")      renderAddTab();
     if (activeTab === "ojt")      renderOjt();
     if (activeTab === "acad")     renderAcad();
+    if (activeTab === "sched")    renderSchedule();
   }
 
   // ── Actions ───────────────────────────────────────────────────────────────
@@ -931,8 +1022,254 @@
       }).join("")}`;
   }
 
+  // ── Schedule ──────────────────────────────────────────────────────────────
+  let schedClasses = JSON.parse(localStorage.getItem("ce_classes")) || [];
+  let schedEvts    = JSON.parse(localStorage.getItem("ce_events"))  || [];
+  let schedView    = "today";
+  let newClassDays  = [];
+  let newClassColor = COLORS[4];
+
+  const DAYS = ["Mon","Tue","Wed","Thu","Fri","Sat"];
+
+  function saveSchedClasses() { localStorage.setItem("ce_classes", JSON.stringify(schedClasses)); }
+  function saveSchedEvts()    { localStorage.setItem("ce_events",  JSON.stringify(schedEvts)); }
+  function setSchedView(v)    { schedView = v; renderSchedule(); }
+
+  function renderSchedule() {
+    const wrap = document.getElementById("sched-content");
+    if (!wrap) return;
+    const perm = (typeof Notification !== "undefined") ? Notification.permission : "denied";
+    wrap.innerHTML = `
+      <div class="notif-bar">
+        <span class="notif-bar-label">🔔 Class &amp; exam reminders${perm === "granted" ? " — enabled" : ""}</span>
+        ${perm === "granted"
+          ? `<span class="notif-btn on">Enabled</span>`
+          : `<button class="notif-btn off" onclick="enableNotif()">Enable</button>`}
+      </div>
+      <div class="sched-sub">
+        <button class="sched-sub-btn${schedView==="today"?" active":""}" onclick="setSchedView('today')">Today</button>
+        <button class="sched-sub-btn${schedView==="weekly"?" active":""}" onclick="setSchedView('weekly')">Weekly</button>
+        <button class="sched-sub-btn${schedView==="events"?" active":""}" onclick="setSchedView('events')">Exams &amp; Quizzes</button>
+      </div>
+      ${schedView === "today"  ? renderSchedToday()  : ""}
+      ${schedView === "weekly" ? renderSchedWeekly() : ""}
+      ${schedView === "events" ? renderSchedEvents() : ""}`;
+  }
+
+  function renderSchedToday() {
+    const now = new Date();
+    const dayName  = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"][now.getDay()];
+    const todayStr = now.toISOString().split("T")[0];
+    const dateLabel = now.toLocaleDateString("en-PH", { weekday:"long", month:"long", day:"numeric" });
+    const todayClasses = schedClasses
+      .filter(c => c.days.includes(dayName))
+      .sort((a,b) => a.startTime.localeCompare(b.startTime));
+    const upcoming = schedEvts
+      .filter(e => e.date >= todayStr)
+      .sort((a,b) => a.date.localeCompare(b.date) || a.time.localeCompare(b.time))
+      .slice(0, 6);
+    let html = `<div class="day-label today-label" style="margin-bottom:10px">📅 ${esc(dateLabel)}</div>`;
+    html += todayClasses.length === 0
+      ? `<div class="empty" style="padding:16px 0 10px"><i class="ti ti-coffee"></i>No classes today!</div>`
+      : todayClasses.map(schedClassCard).join("");
+    if (upcoming.length > 0) {
+      html += `<div class="sched-section-lbl" style="margin-top:18px">📝 Upcoming Exams &amp; Quizzes</div>`;
+      html += upcoming.map(e => schedEventCard(e)).join("");
+    }
+    return html;
+  }
+
+  function renderSchedWeekly() {
+    const todayName = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"][new Date().getDay()];
+    let html = `
+      <div class="sched-form">
+        <h3>Add Class</h3>
+        <input class="sched-input" type="text" id="cls-name" placeholder="Subject name" />
+        <div class="day-checks">
+          ${DAYS.map(d => `<span class="day-check${newClassDays.includes(d)?" selected":""}" onclick="toggleDay('${d}')">${d}</span>`).join("")}
+        </div>
+        <div class="sched-time-row">
+          <span class="time-lbl">From</span>
+          <input class="sched-input" type="time" id="cls-start" />
+          <span class="time-lbl">To</span>
+          <input class="sched-input" type="time" id="cls-end" />
+        </div>
+        <input class="sched-input" type="text" id="cls-room" placeholder="Room / location (optional)" />
+        <div class="cpick-row">
+          ${COLORS.map(c => `<div class="cpick${c===newClassColor?" selected":""}" style="background:${c}" onclick="pickClassColor('${c}')"></div>`).join("")}
+        </div>
+        <button class="btn-primary" style="width:100%" onclick="addSchedClass()">Add Class</button>
+      </div>`;
+    html += DAYS.map(day => {
+      const dayCls = schedClasses.filter(c => c.days.includes(day)).sort((a,b) => a.startTime.localeCompare(b.startTime));
+      const isToday = day === todayName;
+      return `
+        <div class="day-block">
+          <div class="day-label${isToday?" today-label":""}">
+            ${isToday?"📅 ":""}${day}${isToday?` <span style="font-weight:400;color:var(--text-hint)">(Today)</span>`:""}
+          </div>
+          ${dayCls.length === 0
+            ? `<div style="font-size:12px;color:var(--text-hint);padding:2px 0 6px">No classes</div>`
+            : dayCls.map(schedClassCard).join("")}
+        </div>`;
+    }).join("");
+    return html;
+  }
+
+  function renderSchedEvents() {
+    const todayStr = new Date().toISOString().split("T")[0];
+    let html = `
+      <div class="sched-form">
+        <h3>Add Exam / Quiz</h3>
+        <select class="sched-input" id="evt-type">
+          <option value="exam">Exam</option>
+          <option value="quiz">Quiz</option>
+          <option value="lab">Lab</option>
+          <option value="act">Activity</option>
+        </select>
+        <input class="sched-input" type="text" id="evt-subj" placeholder="Subject name" />
+        <div class="sched-time-row">
+          <span class="time-lbl">Date</span>
+          <input class="sched-input" type="date" id="evt-date" />
+          <span class="time-lbl">Time</span>
+          <input class="sched-input" type="time" id="evt-time" />
+        </div>
+        <input class="sched-input" type="text" id="evt-notes" placeholder="Notes / coverage (optional)" />
+        <button class="btn-primary" style="width:100%" onclick="addSchedEvent()">Add</button>
+      </div>`;
+    const sorted   = [...schedEvts].sort((a,b) => a.date.localeCompare(b.date) || a.time.localeCompare(b.time));
+    const upcoming = sorted.filter(e => e.date >= todayStr);
+    const past     = sorted.filter(e => e.date <  todayStr);
+    if (upcoming.length === 0 && past.length === 0) {
+      html += `<div class="empty" style="padding:16px 0"><i class="ti ti-calendar-event"></i>No exams or quizzes yet.</div>`;
+    }
+    if (upcoming.length > 0) {
+      html += `<div class="sched-section-lbl">Upcoming</div>` + upcoming.map(e => schedEventCard(e)).join("");
+    }
+    if (past.length > 0) {
+      html += `<div class="sched-section-lbl" style="margin-top:10px">Past</div>` + past.map(e => schedEventCard(e, true)).join("");
+    }
+    return html;
+  }
+
+  function schedClassCard(c) {
+    return `
+      <div class="class-card">
+        <div class="class-dot" style="background:${c.color}"></div>
+        <div class="class-info">
+          <div class="class-name">${esc(c.name)}</div>
+          ${c.room ? `<div class="class-room">${esc(c.room)}</div>` : ""}
+        </div>
+        <div class="class-time">${c.startTime}–${c.endTime}</div>
+        <button class="del-btn" onclick="deleteSchedClass('${c.id}')"><i class="ti ti-x"></i></button>
+      </div>`;
+  }
+
+  function schedEventCard(e, past = false) {
+    const d = new Date(e.date + "T00:00:00");
+    const label = d.toLocaleDateString("en-PH", { month:"short", day:"numeric", year:"numeric" });
+    return `
+      <div class="event-card" style="${past?"opacity:0.5":""}">
+        <span class="event-type-badge ${e.type}">${e.type}</span>
+        <div class="event-info">
+          <div class="event-name">${esc(e.subject)}</div>
+          <div class="event-when">${esc(label)} · ${e.time}${e.notes ? " · " + esc(e.notes) : ""}</div>
+        </div>
+        <button class="del-btn" onclick="deleteSchedEvent('${e.id}')"><i class="ti ti-x"></i></button>
+      </div>`;
+  }
+
+  function toggleDay(day) {
+    if (newClassDays.includes(day)) newClassDays = newClassDays.filter(d => d !== day);
+    else newClassDays.push(day);
+    document.querySelectorAll(".day-check").forEach(el =>
+      el.classList.toggle("selected", newClassDays.includes(el.textContent.trim()))
+    );
+  }
+
+  function pickClassColor(c) {
+    newClassColor = c;
+    document.querySelectorAll(".cpick").forEach(el =>
+      el.classList.toggle("selected", el.style.background === c || el.style.backgroundColor === c)
+    );
+  }
+
+  function addSchedClass() {
+    const name  = (document.getElementById("cls-name")?.value || "").trim();
+    const start = document.getElementById("cls-start")?.value;
+    const end   = document.getElementById("cls-end")?.value;
+    if (!name || newClassDays.length === 0 || !start || !end) {
+      alert("Please enter a subject name, pick at least one day, and set start/end times.");
+      return;
+    }
+    schedClasses.push({
+      id: uid(), name, days: [...newClassDays], startTime: start, endTime: end,
+      room: (document.getElementById("cls-room")?.value || "").trim(),
+      color: newClassColor
+    });
+    saveSchedClasses();
+    scheduleNotificationsToday();
+    newClassDays = [];
+    renderSchedule();
+  }
+
+  function deleteSchedClass(id) {
+    schedClasses = schedClasses.filter(c => c.id !== id);
+    saveSchedClasses();
+    renderSchedule();
+  }
+
+  function addSchedEvent() {
+    const type  = document.getElementById("evt-type")?.value;
+    const subj  = (document.getElementById("evt-subj")?.value || "").trim();
+    const date  = document.getElementById("evt-date")?.value;
+    const time  = document.getElementById("evt-time")?.value;
+    const notes = (document.getElementById("evt-notes")?.value || "").trim();
+    if (!subj || !date || !time) { alert("Please fill in subject, date, and time."); return; }
+    schedEvts.push({ id: uid(), type, subject: subj, date, time, notes });
+    saveSchedEvts();
+    renderSchedule();
+  }
+
+  function deleteSchedEvent(id) {
+    schedEvts = schedEvts.filter(e => e.id !== id);
+    saveSchedEvts();
+    renderSchedule();
+  }
+
+  function enableNotif() {
+    if (!("Notification" in window)) { alert("Your browser doesn't support notifications."); return; }
+    Notification.requestPermission().then(perm => {
+      renderSchedule();
+      if (perm === "granted") scheduleNotificationsToday();
+    });
+  }
+
+  function scheduleNotificationsToday() {
+    if (typeof Notification === "undefined" || Notification.permission !== "granted") return;
+    const now      = new Date();
+    const dayName  = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"][now.getDay()];
+    const todayStr = now.toISOString().split("T")[0];
+    schedClasses.filter(c => c.days.includes(dayName)).forEach(cls => {
+      const [h, m] = cls.startTime.split(":").map(Number);
+      const notifAt = new Date(); notifAt.setHours(h, m - 15, 0, 0);
+      const diff = notifAt - now;
+      if (diff > 0) {
+        setTimeout(() => new Notification(`Class in 15 min: ${cls.name}`, {
+          body: `${cls.startTime}–${cls.endTime}${cls.room ? " · " + cls.room : ""}`,
+        }), diff);
+      }
+    });
+    schedEvts.filter(e => e.date === todayStr).forEach(evt => {
+      new Notification(`${evt.type.toUpperCase()} today: ${evt.subject}`, {
+        body: `${evt.time}${evt.notes ? " · " + evt.notes : ""}`,
+      });
+    });
+  }
+
   // ── Init ──────────────────────────────────────────────────────────────────
   syncAcadToSubjects();
+  scheduleNotificationsToday();
   render();
 </script>
 </body>
