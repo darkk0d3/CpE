@@ -354,6 +354,29 @@
     .cpick.selected { border-color: var(--text); }
     .sched-section-lbl { font-size: 12px; font-weight: 600; color: var(--text-sec); margin: 14px 0 6px; }
 
+    /* ── Toast Notifications ── */
+    #toast-container {
+      position: fixed; bottom: 20px; right: 16px; z-index: 9999;
+      display: flex; flex-direction: column-reverse; gap: 8px;
+      max-width: 310px; pointer-events: none;
+    }
+    .toast {
+      background: var(--surface); border: 0.5px solid var(--border-md);
+      border-radius: var(--radius-md); padding: 12px 14px;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.18);
+      display: flex; gap: 10px; align-items: flex-start;
+      pointer-events: all; animation: toast-in 0.25s ease;
+    }
+    .toast-icon { font-size: 18px; flex-shrink: 0; line-height: 1.3; }
+    .toast-body { flex: 1; min-width: 0; }
+    .toast-title { font-size: 13px; font-weight: 600; }
+    .toast-sub { font-size: 11px; color: var(--text-sec); margin-top: 2px; line-height: 1.4; }
+    .toast-close {
+      background: none; border: none; cursor: pointer;
+      color: var(--text-hint); font-size: 14px; padding: 0; flex-shrink: 0; line-height: 1;
+    }
+    @keyframes toast-in { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:none; } }
+
     /* ── Desktop Sidebar Layout ── */
     @media (min-width: 768px) {
       html, body { height: 100%; overflow: hidden; }
@@ -1102,10 +1125,10 @@
     const perm = (typeof Notification !== "undefined") ? Notification.permission : "denied";
     wrap.innerHTML = `
       <div class="notif-bar">
-        <span class="notif-bar-label">🔔 Class &amp; exam reminders${perm === "granted" ? " — enabled" : ""}</span>
+        <span class="notif-bar-label">🔔 In-app alerts — always on while app is open${perm === "granted" ? " · Push enabled" : ""}</span>
         ${perm === "granted"
-          ? `<span class="notif-btn on">Enabled</span>`
-          : `<button class="notif-btn off" onclick="enableNotif()">Enable</button>`}
+          ? `<span class="notif-btn on">Push on</span>`
+          : `<button class="notif-btn off" onclick="enableNotif()" title="iPhone: in-app alerts work even without this">+ Push</button>`}
       </div>
       <div class="sched-sub">
         <button class="sched-sub-btn${schedView==="today"?" active":""}" onclick="setSchedView('today')">Today</button>
@@ -1298,33 +1321,64 @@
     renderSchedule();
   }
 
+  function showToast(title, body, icon, duration) {
+    icon = icon || "🔔";
+    duration = duration || 6000;
+    const container = document.getElementById("toast-container");
+    if (!container) return;
+    const el = document.createElement("div");
+    el.className = "toast";
+    el.innerHTML = `<span class="toast-icon">${icon}</span>
+      <div class="toast-body"><div class="toast-title">${title}</div>${body ? `<div class="toast-sub">${body}</div>` : ""}</div>
+      <button class="toast-close" onclick="this.closest('.toast').remove()">✕</button>`;
+    container.appendChild(el);
+    setTimeout(() => el.remove(), duration);
+  }
+
   function enableNotif() {
-    if (!("Notification" in window)) { alert("Your browser doesn't support notifications."); return; }
+    if (!("Notification" in window)) {
+      showToast("Not supported", "In-app alerts are always active. Push notifications aren't supported on this browser.", "ℹ️");
+      return;
+    }
     Notification.requestPermission().then(perm => {
       renderSchedule();
       if (perm === "granted") scheduleNotificationsToday();
+      else showToast("Push blocked", "In-app alerts will still appear while the app is open.", "ℹ️");
     });
   }
 
   function scheduleNotificationsToday() {
-    if (typeof Notification === "undefined" || Notification.permission !== "granted") return;
     const now      = new Date();
     const dayName  = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"][now.getDay()];
     const todayStr = now.toISOString().split("T")[0];
+    const nativeOk = typeof Notification !== "undefined" && Notification.permission === "granted";
+
     schedClasses.filter(c => c.days.includes(dayName)).forEach(cls => {
       const [h, m] = cls.startTime.split(":").map(Number);
-      const notifAt = new Date(); notifAt.setHours(h, m - 15, 0, 0);
-      const diff = notifAt - now;
-      if (diff > 0) {
-        setTimeout(() => new Notification(`Class in 15 min: ${cls.name}`, {
-          body: `${cls.startTime}–${cls.endTime}${cls.room ? " · " + cls.room : ""}`,
-        }), diff);
+      const notifAt15 = new Date(); notifAt15.setHours(h, m - 15, 0, 0);
+      const notifAt0  = new Date(); notifAt0.setHours(h, m, 0, 0);
+      const diff15 = notifAt15 - now;
+      const diff0  = notifAt0  - now;
+      const detail = `${cls.startTime}–${cls.endTime}${cls.room ? " · " + cls.room : ""}`;
+      if (diff15 > 0) {
+        setTimeout(() => {
+          showToast(`Class in 15 min: ${cls.name}`, detail, "📚");
+          if (nativeOk) new Notification(`Class in 15 min: ${cls.name}`, { body: detail });
+        }, diff15);
+      }
+      if (diff0 > 0) {
+        setTimeout(() => {
+          showToast(`Class starting now: ${cls.name}`, detail, "🔔");
+          if (nativeOk) new Notification(`Class starting now: ${cls.name}`, { body: detail });
+        }, diff0);
       }
     });
+
     schedEvts.filter(e => e.date === todayStr).forEach(evt => {
-      new Notification(`${evt.type.toUpperCase()} today: ${evt.subject}`, {
-        body: `${evt.time}${evt.notes ? " · " + evt.notes : ""}`,
-      });
+      const label  = `${evt.type.toUpperCase()} today: ${evt.subject}`;
+      const detail = `${evt.time}${evt.notes ? " · " + evt.notes : ""}`;
+      showToast(label, detail, evt.type === "exam" ? "📝" : "✏️");
+      if (nativeOk) new Notification(label, { body: detail });
     });
   }
 
@@ -1333,5 +1387,6 @@
   scheduleNotificationsToday();
   render();
 </script>
+<div id="toast-container" aria-live="polite"></div>
 </body>
 </html>
