@@ -68,12 +68,12 @@
     .header-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
     .header-top h1 { font-size: 20px; font-weight: 600; }
     .header-top p { font-size: 13px; color: var(--text-sec); }
-    .tab-bar { display: flex; gap: 2px; }
+    .tab-bar { display: flex; gap: 2px; overflow-x: auto; }
     .tab {
       font-size: 13px; font-weight: 500; padding: 8px 14px;
       border: none; background: none; color: var(--text-sec);
       cursor: pointer; border-bottom: 2px solid transparent;
-      font-family: inherit; transition: color 0.15s;
+      font-family: inherit; transition: color 0.15s; white-space: nowrap;
     }
     .tab:hover { color: var(--text); }
     .tab.active { color: var(--green); border-bottom-color: var(--green); }
@@ -101,6 +101,7 @@
       margin-bottom: 10px;
       overflow: hidden;
     }
+    .subject-card.current-sem { border-color: var(--green); }
     .subject-header {
       display: flex; align-items: center; gap: 10px;
       padding: 12px 14px; cursor: pointer;
@@ -137,11 +138,12 @@
     .lesson-name { flex: 1; font-size: 13px; }
     .badge {
       font-size: 10px; font-weight: 600; padding: 3px 9px;
-      border-radius: 20px; cursor: pointer; border: none;
-      font-family: inherit; white-space: nowrap; transition: opacity 0.15s;
+      border-radius: 20px; border: none;
+      font-family: inherit; white-space: nowrap;
       letter-spacing: 0.02em;
     }
-    .badge:hover { opacity: 0.75; }
+    button.badge { cursor: pointer; transition: opacity 0.15s; }
+    button.badge:hover { opacity: 0.75; }
     .badge.learn { background: var(--red-bg); color: var(--red-text); }
     .badge.progress { background: var(--amber-bg); color: var(--amber-text); }
     .badge.know { background: var(--green-bg); color: var(--green-text); }
@@ -237,6 +239,34 @@
       color: var(--text-hint); font-size: 14px;
     }
     .empty i { font-size: 36px; display: block; margin-bottom: 8px; }
+
+    /* ── Static Panels (OJT + Acad) ── */
+    .section-banner {
+      background: var(--green-bg);
+      border: 0.5px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 14px 16px;
+      margin-bottom: 12px;
+    }
+    .section-banner-title { font-size: 14px; font-weight: 600; color: var(--green-text); }
+    .section-banner-sub { font-size: 12px; color: var(--green-text); opacity: 0.8; margin-top: 3px; }
+    .acad-stats { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; margin-bottom: 12px; }
+    .acad-stat {
+      background: var(--surface); border: 0.5px solid var(--border);
+      border-radius: var(--radius-md); padding: 10px; text-align: center;
+    }
+    .acad-stat-num { font-size: 22px; font-weight: 600; }
+    .acad-stat-label { font-size: 10px; color: var(--text-sec); margin-top: 2px; }
+    .acad-stat.done .acad-stat-num { color: var(--green); }
+    .acad-stat.active .acad-stat-num { color: #BA7517; }
+    .acad-stat.pending .acad-stat-num { color: #E24B4A; }
+    .subj-code { font-size: 10px; color: var(--text-hint); font-family: monospace; flex-shrink: 0; }
+    .subj-units { font-size: 11px; color: var(--text-hint); white-space: nowrap; flex-shrink: 0; }
+    .current-sem-tag {
+      font-size: 10px; font-weight: 600; padding: 2px 7px;
+      border-radius: 20px; background: var(--green-bg); color: var(--green-text);
+      margin-left: 6px; vertical-align: middle;
+    }
   </style>
 </head>
 <body>
@@ -253,6 +283,8 @@
       <button class="tab active" data-tab="subjects" onclick="switchTab('subjects')">Subjects</button>
       <button class="tab" data-tab="all" onclick="switchTab('all')">All Lessons</button>
       <button class="tab" data-tab="add" onclick="switchTab('add')">+ Add Subject</button>
+      <button class="tab" data-tab="ojt" onclick="switchTab('ojt')">OJT Guide</button>
+      <button class="tab" data-tab="acad" onclick="switchTab('acad')">Acad Plan</button>
     </div>
   </div>
 
@@ -275,6 +307,16 @@
         <button class="filter-btn f-know" onclick="setFilter('know')">Known (<span id="fc-know">0</span>)</button>
       </div>
       <div id="all-lessons-list"></div>
+    </div>
+
+    <!-- OJT Guide Tab -->
+    <div id="tab-ojt" style="display:none">
+      <div id="ojt-content"></div>
+    </div>
+
+    <!-- Acad Plan Tab -->
+    <div id="tab-acad" style="display:none">
+      <div id="acad-content"></div>
     </div>
 
     <!-- Add Subject Tab -->
@@ -392,7 +434,7 @@
   // ── Tab switching ─────────────────────────────────────────────────────────
   function switchTab(tab) {
     activeTab = tab;
-    ["subjects","all","add"].forEach(t => {
+    ["subjects","all","ojt","acad","add"].forEach(t => {
       document.getElementById("tab-"+t).style.display = t === tab ? "" : "none";
       document.querySelector(`[data-tab="${t}"]`).classList.toggle("active", t === tab);
     });
@@ -517,6 +559,8 @@
     if (activeTab === "subjects") renderSubjects();
     if (activeTab === "all")      renderAll();
     if (activeTab === "add")      renderAddTab();
+    if (activeTab === "ojt")      renderOjt();
+    if (activeTab === "acad")     renderAcad();
   }
 
   // ── Actions ───────────────────────────────────────────────────────────────
@@ -547,7 +591,6 @@
       ...s, lessons: [...s.lessons, { id: uid(), name, status: "learn" }]
     });
     save(); render();
-    // re-focus input after render
     setTimeout(() => { const el2 = document.getElementById("nl-"+sid); if(el2) el2.focus(); }, 10);
   }
 
@@ -588,6 +631,261 @@
 
   function esc(str) {
     return str.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+  }
+
+  // ── OJT Guide (static) ────────────────────────────────────────────────────
+  const OJT_LEVELS = [
+    { id:"ojt1", icon:"🌐", color:"#E6F1FB", title:"Level 1 — Basics", sub:"Start here · 5 topics",
+      items:["How the Internet works (DNS, IP addresses, HTTP/HTTPS)","What is Cybersecurity (malware, hacking, why it matters)","CIA Triad (Confidentiality, Integrity, Availability)","Types of cyber threats (phishing, ransomware, viruses, DDoS)","Basic computer networking (routers, firewalls, IP addresses)"] },
+    { id:"ojt2", icon:"🐧", color:"#FAEEDA", title:"Level 2 — Intermediate", sub:"Build your skills · 5 topics",
+      items:["Linux terminal basics","Python basics (scripting, loops, file reading)","Networking deeper (OSI model, TCP/IP, ports, protocols)","How malware works","Vulnerabilities and exploits (what CVE means)"] },
+    { id:"ojt3", icon:"🛠️", color:"#EAF3DE", title:"Level 3 — Tools to Know", sub:"Industry tools · 4 topics",
+      items:["Wireshark — network traffic analysis","Nmap — network scanning","VirusTotal — malware scanning","Trend Vision One — Trend Micro's own platform"] },
+    { id:"ojt4", icon:"⭐", color:"#FBEAF0", title:"Bonus Topics", sub:"Nice to have · 3 topics",
+      items:["Cloud basics (AWS, Azure, Google Cloud)","AI in cybersecurity","Basic IT support and troubleshooting"] },
+  ];
+
+  const OJT_RESOURCES = [
+    { name:"Google Cybersecurity Certificate", where:"Coursera", note:"free to audit" },
+    { name:"TryHackMe", where:"tryhackme.com", note:"beginner-friendly, gamified labs" },
+    { name:"freeCodeCamp", where:"freecodecamp.org", note:"Linux and Python" },
+    { name:"Trend Micro Learn", where:"trendmicro.com", note:"learn their products directly" },
+    { name:"YouTube", where:"youtube.com", note:"for everything else" },
+  ];
+
+  let panelOpen = {};
+
+  function togglePanel(id) {
+    panelOpen[id] = !panelOpen[id];
+    const el   = document.getElementById("panel-" + id);
+    const chev = document.getElementById("chev-" + id);
+    if (el)   el.style.display = panelOpen[id] ? "" : "none";
+    if (chev) chev.classList.toggle("open", !!panelOpen[id]);
+  }
+
+  function renderOjt() {
+    const wrap = document.getElementById("ojt-content");
+    if (!wrap) return;
+    wrap.innerHTML = `
+      <div class="section-banner">
+        <div class="section-banner-title">🛡️ Trend Micro OJT Career Guide</div>
+        <div class="section-banner-sub">Cybersecurity internship prep — work through each level in order</div>
+      </div>
+      ${OJT_LEVELS.map(lvl => `
+        <div class="subject-card">
+          <div class="subject-header" onclick="togglePanel('${lvl.id}')">
+            <div class="subject-icon" style="background:${lvl.color}">${lvl.icon}</div>
+            <div class="subject-info">
+              <div class="subject-name">${lvl.title}</div>
+              <div style="font-size:11px;color:var(--text-hint);margin-top:3px">${lvl.sub}</div>
+            </div>
+            <i class="ti ti-chevron-down chevron" id="chev-${lvl.id}"></i>
+          </div>
+          <div class="lessons-list" id="panel-${lvl.id}" style="display:none">
+            ${lvl.items.map(item => `
+              <div class="lesson-row">
+                <span class="lesson-name">${esc(item)}</span>
+              </div>`).join("")}
+          </div>
+        </div>`).join("")}
+      <div class="subject-card">
+        <div class="subject-header" onclick="togglePanel('ojt-res')">
+          <div class="subject-icon" style="background:#E1F5EE">📚</div>
+          <div class="subject-info">
+            <div class="subject-name">Free Resources</div>
+            <div style="font-size:11px;color:var(--text-hint);margin-top:3px">Where to study · 5 links</div>
+          </div>
+          <i class="ti ti-chevron-down chevron" id="chev-ojt-res"></i>
+        </div>
+        <div class="lessons-list" id="panel-ojt-res" style="display:none">
+          ${OJT_RESOURCES.map(r => `
+            <div class="lesson-row" style="flex-direction:column;align-items:flex-start;gap:2px">
+              <div style="font-size:13px;font-weight:500">${esc(r.name)}</div>
+              <div style="font-size:11px;color:var(--text-hint)">${esc(r.where)} — ${esc(r.note)}</div>
+            </div>`).join("")}
+        </div>
+      </div>`;
+  }
+
+  // ── Acad Plan (static) ────────────────────────────────────────────────────
+  const CURRICULUM = [
+    { id:"s11", label:"1st Year — 1st Sem", current:false, subjects:[
+      {code:"MLC 1101",name:"Literacy/Civic Welfare/Military Science 1",units:3,status:"credited"},
+      {code:"NCH 1101",name:"Chemistry for Engineers Lec",units:3,status:"credited"},
+      {code:"NCH 1102",name:"Chemistry for Engineers Lab",units:1,status:"credited"},
+      {code:"NCP 1101",name:"CpE as a Discipline",units:1,status:"credited"},
+      {code:"NCP 1102",name:"Programming Logic and Design",units:2,status:"credited"},
+      {code:"NMA 1101",name:"Calculus 1",units:3,status:"credited"},
+      {code:"PPE 1101",name:"PE 1",units:2,status:"credited"},
+      {code:"ZGE 1108",name:"Understanding the Self",units:3,status:"credited"},
+    ]},
+    { id:"s12", label:"1st Year — 2nd Sem", current:false, subjects:[
+      {code:"MLC 1102",name:"MLC 1102",units:3,status:"credited"},
+      {code:"NCP 1103",name:"Discrete Math",units:3,status:"credited"},
+      {code:"NCP 1202",name:"DBMS",units:1,status:"credited"},
+      {code:"NCP 1203",name:"Data Structures",units:2,status:"credited"},
+      {code:"NEE 2103",name:"Electrical Circuits Lec",units:3,status:"pending"},
+      {code:"NEE 2104",name:"Electrical Circuits Lab",units:1,status:"credited"},
+      {code:"NMA 1201",name:"Calculus 2",units:3,status:"enrolled"},
+      {code:"NPH 1201",name:"Physics Lec",units:3,status:"credited"},
+      {code:"NPH 1202",name:"Physics Lab",units:1,status:"credited"},
+      {code:"PPE 1102",name:"PE 2",units:2,status:"credited"},
+      {code:"ZGE 1104",name:"Math in the Modern World",units:3,status:"credited"},
+    ]},
+    { id:"s21", label:"2nd Year — 1st Sem", current:false, subjects:[
+      {code:"NCP 2101",name:"Logic Circuits Lec",units:3,status:"credited"},
+      {code:"NCP 2102",name:"Logic Circuits Lab",units:1,status:"credited"},
+      {code:"NCP 2103",name:"OOP",units:2,status:"credited"},
+      {code:"NCP 2104",name:"Differential Equations",units:3,status:"pending"},
+      {code:"NCP 2105",name:"Engineering Data Analysis",units:3,status:"credited"},
+      {code:"NEC 1205",name:"Fundamentals of Electronic Circuits Lec",units:3,status:"enrolled"},
+      {code:"NEC 1206",name:"Electronic Circuits Lab",units:1,status:"credited"},
+      {code:"PPE 1103",name:"PE 3",units:2,status:"credited"},
+      {code:"ZGE 1107",name:"Science Technology and Society",units:3,status:"credited"},
+      {code:"ZPD 1101",name:"Personality Development",units:1,status:"credited"},
+    ]},
+    { id:"s22", label:"2nd Year — 2nd Sem", current:false, subjects:[
+      {code:"NCP 1201",name:"PC Troubleshooting",units:1,status:"credited"},
+      {code:"NCP 2201",name:"Computer Architecture Lec",units:3,status:"credited"},
+      {code:"NCP 2202",name:"Computer Architecture Lab",units:1,status:"credited"},
+      {code:"NCP 2204",name:"Microprocessors Lec",units:3,status:"pending"},
+      {code:"NCP 2205",name:"Microprocessors Lab",units:1,status:"pending"},
+      {code:"NCP 2206",name:"Data and Digital Comms Lec",units:3,status:"credited"},
+      {code:"NCP 2207",name:"Data and Digital Comms Lab",units:1,status:"credited"},
+      {code:"NCP 2208",name:"OS Lec",units:3,status:"credited"},
+      {code:"NCP 2209",name:"OS Lab",units:1,status:"credited"},
+      {code:"PPE 1104",name:"PE 4",units:2,status:"credited"},
+      {code:"ZGE 1109",name:"Life and Works of Rizal",units:3,status:"credited"},
+    ]},
+    { id:"s31", label:"3rd Year — 1st Sem", current:true, subjects:[
+      {code:"NCP 2203",name:"Mixed Signals and Sensors",units:3,status:"enrolled"},
+      {code:"NCP 3101",name:"Embedded Systems Lec",units:3,status:"enrolled"},
+      {code:"NCP 3102",name:"Embedded Systems Lab",units:1,status:"enrolled"},
+      {code:"NCP 3103",name:"CompNets and Security Lec",units:3,status:"enrolled"},
+      {code:"NCP 3104",name:"CompNets and Security Lab",units:1,status:"enrolled"},
+      {code:"NCP 3105",name:"Software Design Lec",units:3,status:"credited"},
+      {code:"NCP 3106",name:"Software Design Lab",units:1,status:"enrolled"},
+      {code:"NCP 3108",name:"Numerical Methods",units:3,status:"pending"},
+      {code:"ZGE 1105",name:"Purposive Communication",units:3,status:"enrolled"},
+      {code:"ZGE EL01",name:"GE Elective 1",units:3,status:"credited"},
+    ]},
+    { id:"s32", label:"3rd Year — 2nd Sem", current:false, subjects:[
+      {code:"NCP 3202",name:"Feedback and Control Systems",units:3,status:"pending"},
+      {code:"NCP 3203",name:"CompNet Design Lec",units:2,status:"pending"},
+      {code:"NCP 3204",name:"CompNet Design Lab",units:1,status:"pending"},
+      {code:"NCP 3205",name:"Methods of Research",units:2,status:"pending"},
+      {code:"NCP 3206",name:"Computer-Aided Drafting",units:1,status:"pending"},
+      {code:"NCP 4104",name:"Project Management Lec",units:2,status:"pending"},
+      {code:"NCP 4105",name:"Project Management Lab",units:1,status:"credited"},
+      {code:"NCP 4202",name:"CpE Laws and Professional Practice",units:2,status:"credited"},
+      {code:"NCP EL01",name:"CpE Track 1",units:3,status:"pending"},
+      {code:"NCP EL02",name:"CpE Track 1 Lab",units:1,status:"pending"},
+      {code:"ZGE 1106",name:"Readings in Philippine History",units:3,status:"enrolled"},
+      {code:"ZGE EL02",name:"GE Elective 2",units:3,status:"credited"},
+    ]},
+    { id:"s3s", label:"3rd Year — Summer", current:false, subjects:[
+      {code:"NCP 4970",name:"On-the-Job Training",units:3,status:"enrolled"},
+    ]},
+    { id:"s41", label:"4th Year — 1st Sem", current:false, subjects:[
+      {code:"NCP 3201",name:"Intro to HDL",units:1,status:"enrolled"},
+      {code:"NCP 4101",name:"CpE Drafting and Design",units:1,status:"pending"},
+      {code:"NCP 4102",name:"DSP Lec",units:3,status:"pending"},
+      {code:"NCP 4103",name:"DSP Lab",units:1,status:"pending"},
+      {code:"NCP 4980",name:"CpE Practice and Design 1",units:1,status:"pending"},
+      {code:"NCP EL03",name:"CpE Track 2",units:3,status:"pending"},
+      {code:"NCP EL04",name:"CpE Track 2 Lab",units:1,status:"pending"},
+      {code:"ZGE 1101",name:"Art Appreciation",units:3,status:"enrolled"},
+      {code:"ZGE 1102",name:"The Contemporary World",units:3,status:"enrolled"},
+      {code:"ZGE 1103",name:"Ethics",units:3,status:"credited"},
+      {code:"ZGE EL03",name:"GE Elective 3",units:3,status:"enrolled"},
+    ]},
+    { id:"s42", label:"4th Year — 2nd Sem", current:false, subjects:[
+      {code:"NCP 3107",name:"Technopreneurship",units:3,status:"pending"},
+      {code:"NCP 3207",name:"Occupational Health and Safety",units:3,status:"pending"},
+      {code:"NCP 4106",name:"Engineering Economics",units:3,status:"pending"},
+      {code:"NCP 4201",name:"Emerging Technologies",units:3,status:"pending"},
+      {code:"NCP 4203",name:"Seminars and Field Trips",units:2,status:"pending"},
+      {code:"NCP 4990",name:"CpE Practice and Design 2",units:2,status:"pending"},
+      {code:"NCP EL05",name:"CpE Track 3",units:3,status:"pending"},
+      {code:"NCP EL06",name:"CpE Track 3 Lab",units:1,status:"pending"},
+    ]},
+  ];
+
+  let acadInitialized = false;
+
+  function acadStatusMeta(st) {
+    if (st === "credited") return { cls:"know",     label:"Credited" };
+    if (st === "enrolled") return { cls:"progress", label:"Enrolled"  };
+    return                        { cls:"learn",    label:"Pending"   };
+  }
+
+  function renderAcad() {
+    const wrap = document.getElementById("acad-content");
+    if (!wrap) return;
+
+    if (!acadInitialized) {
+      panelOpen["acad-s31"] = true;
+      acadInitialized = true;
+    }
+
+    let creditedU = 0, enrolledU = 0, pendingU = 0;
+    CURRICULUM.forEach(sem => sem.subjects.forEach(s => {
+      if (s.status === "credited")      creditedU += s.units;
+      else if (s.status === "enrolled") enrolledU += s.units;
+      else                              pendingU  += s.units;
+    }));
+
+    wrap.innerHTML = `
+      <div class="section-banner">
+        <div class="section-banner-title">🎓 CpE Academic Planner</div>
+        <div class="section-banner-sub">Full curriculum · tap a semester to expand</div>
+      </div>
+      <div class="acad-stats">
+        <div class="acad-stat done">
+          <div class="acad-stat-num">${creditedU}</div>
+          <div class="acad-stat-label">Units Done</div>
+        </div>
+        <div class="acad-stat active">
+          <div class="acad-stat-num">${enrolledU}</div>
+          <div class="acad-stat-label">Enrolled</div>
+        </div>
+        <div class="acad-stat pending">
+          <div class="acad-stat-num">${pendingU}</div>
+          <div class="acad-stat-label">Remaining</div>
+        </div>
+      </div>
+      ${CURRICULUM.map(sem => {
+        const doneU  = sem.subjects.filter(s=>s.status==="credited").reduce((a,s)=>a+s.units,0);
+        const totalU = sem.subjects.reduce((a,s)=>a+s.units,0);
+        const pct    = totalU ? Math.round(doneU/totalU*100) : 0;
+        const key    = "acad-" + sem.id;
+        const isOpen = !!panelOpen[key];
+        return `
+          <div class="subject-card${sem.current?" current-sem":""}">
+            <div class="subject-header" onclick="togglePanel('${key}')">
+              <div class="subject-info" style="margin-left:0">
+                <div class="subject-name">${esc(sem.label)}${sem.current?'<span class="current-sem-tag">Current</span>':""}</div>
+                <div class="progress-row">
+                  <div class="progress-track"><div class="progress-fill" style="width:${pct}%"></div></div>
+                  <span class="progress-label">${doneU}/${totalU} units done</span>
+                </div>
+              </div>
+              <i class="ti ti-chevron-down chevron${isOpen?" open":""}" id="chev-${key}"></i>
+            </div>
+            <div class="lessons-list" id="panel-${key}" style="display:${isOpen?"":"none"}">
+              ${sem.subjects.map(s => {
+                const m = acadStatusMeta(s.status);
+                return `
+                  <div class="lesson-row">
+                    <span class="subj-code">${esc(s.code)}</span>
+                    <span class="lesson-name">${esc(s.name)}</span>
+                    <span class="subj-units">${s.units}u</span>
+                    <span class="badge ${m.cls}">${m.label}</span>
+                  </div>`;
+              }).join("")}
+            </div>
+          </div>`;
+      }).join("")}`;
   }
 
   // ── Init ──────────────────────────────────────────────────────────────────
